@@ -1,0 +1,29 @@
+# Dependencies and local environment
+node_modules/
+.env
+.env.*
+!.env.example
+
+# Local credentials, accounts, and application data
+/mercado-dados.json
+/conectores.json
+/usuarios.json
+/clientes.json
+/dados-contas/
+/cerebro.json
+/estados.json
+/custos-anuncios.json
+/rascunhos-anuncios.json
+/whats-config.json
+/whats-agentes.json
+/whats-historico.json
+/ngrok-dominio.txt
+
+# Backups, logs, diagnostics, and generated state
+/backup*/
+*.log
+/diagnostico-servidor.txt
+/instalar-tudo-log.txt
+/.wwebjs_auth/
+/.wwebjs_cache/
+/.baileys_auth/
