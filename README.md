@@ -1,881 +1,469 @@
-[![CI](https://github.com/Borewit/music-metadata/actions/workflows/ci.yml/badge.svg)](https://github.com/Borewit/music-metadata/actions/workflows/ci.yml)
-[![NPM version](https://img.shields.io/npm/v/music-metadata.svg)](https://npmjs.org/package/music-metadata)
-[![npm downloads](http://img.shields.io/npm/dm/music-metadata.svg)](https://npmcharts.com/compare/music-metadata?start=600&interval=7)
-[![codecov](https://codecov.io/gh/Borewit/music-metadata/branch/master/graph/badge.svg)](https://codecov.io/gh/Borewit/music-metadata)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/57d731b05c9e41889a2a17cb4b0384d7)](https://app.codacy.com/app/Borewit/music-metadata?utm_source=github.com&utm_medium=referral&utm_content=Borewit/music-metadata&utm_campaign=Badge_Grade_Dashboard)
-[![CodeQL](https://github.com/Borewit/music-metadata/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Borewit/music-metadata/actions/workflows/codeql-analysis.yml)
-[![DeepScan grade](https://deepscan.io/api/teams/5165/projects/6938/branches/61821/badge/grade.svg)](https://deepscan.io/dashboard#view=project&tid=5165&pid=6938&bid=61821)
-[![Known Vulnerabilities](https://snyk.io/test/github/Borewit/music-metadata/badge.svg?targetFile=package.json)](https://snyk.io/test/github/Borewit/music-metadata?targetFile=package.json)
+# lru-cache
 
-# music-metadata
+A cache object that deletes the least-recently-used items.
 
-<img src="image/logo-music-metadata.jpg" width="60%" style="display: block; margin: auto;" alt="logo">
+Specify a max number of the most recently used items that you
+want to keep, and this cache will keep that many of the most
+recently accessed items.
 
-Key features:
-- **Comprehensive Format Support**: Supports popular audio formats like MP3, MP4, FLAC, Ogg, WAV, AIFF, and more.
-- **Extensive Metadata Extraction**: Extracts detailed metadata, including ID3v1, ID3v2, APE, Vorbis, and iTunes/MP4 tags.
-- **Streaming Support**: Efficiently handles large audio files by reading metadata from streams, making it suitable for server-side and browser-based applications.
-- **Promise-Based API**: Provides a modern, promise-based API for easy integration into asynchronous workflows.
-- **Cross-Platform**: Works in both [Node.js](https://nodejs.org/) and browser environments with the help of bundlers like [Webpack](https://webpack.js.org/) or [Rollup](https://rollupjs.org/introduction/).
+This is not primarily a TTL cache, and does not make strong TTL
+guarantees. There is no preemptive pruning of expired items by
+default, but you _may_ set a TTL on the cache or on a single
+`set`. If you do so, it will treat expired items as missing, and
+delete them when fetched. If you are more interested in TTL
+caching than LRU caching, check out
+[@isaacs/ttlcache](http://npm.im/@isaacs/ttlcache).
 
-The [`music-metadata`](https://github.com/Borewit/music-metadata) module is ideal for developers working on media applications, music players, or any project that requires access to detailed audio file metadata.
+As of version 7, this is one of the most performant LRU
+implementations available in JavaScript, and supports a wide
+diversity of use cases. However, note that using some of the
+features will necessarily impact performance, by causing the
+cache to have to do more work. See the "Performance" section
+below.
 
-## Compatibility
+## Installation
 
-Module: version 8 migrated from [CommonJS](https://en.wikipedia.org/wiki/CommonJS) to [pure ECMAScript Module (ESM)](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c).
-The distributed JavaScript codebase is compliant with the [ECMAScript 2020 (11th Edition)](https://en.wikipedia.org/wiki/ECMAScript_version_history#11th_Edition_%E2%80%93_ECMAScript_2020) standard.
-
-> [!NOTE]
-> See also [CommonJS backward Compatibility](#commonjs-backward-compatibility)
-
-This module requires a [Node.js ≥ 18](https://nodejs.org/en/about/previous-releases) engine.
-It can also be used in a browser environment when bundled with a module bundler.
-
-## Support the Project
-If you find this project useful and would like to support its development, consider sponsoring or contributing:
-
-- [Become a sponsor to Borewit](https://github.com/sponsors/Borewit)
-
-- Buy me a coffee:
-
-  <a href="https://www.buymeacoffee.com/borewit" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy me A coffee" height="41" width="174"></a>
-
-## Features
-
-### Support for audio file types
-
-| Audio format                                                              | Description                                               | Logo                                                                                             |
-|---------------------------------------------------------------------------|-----------------------------------------------------------|--------------------------------------------------------------------------------------------------|
-| [AIFF / AIFF-C](https://wikipedia.org/wiki/Audio_Interchange_File_Format) | Audio Interchange File Format                             | <img src="./image/logo-Apple_Computer_Logo_rainbow.svg" width="40" alt="Apple rainbow logo">     |
-| [AAC](https://en.wikipedia.org/wiki/Advanced_Audio_Coding)                | ADTS / Advanced Audio Coding                              | <img src="./image/logo-AAC_original.svg" width="40" alt="AAC logo">                              |
-| [APE](https://wikipedia.org/wiki/Monkey's_Audio)                          | Monkey's Audio                                            | <img src="./image/logo-APE-AI.svg" width="40" alt="Monkey's Audio logo">                         |
-| [ASF](https://wikipedia.org/wiki/Advanced_Systems_Format)                 | Advanced Systems Format                                   |                                                                                                  |
-| [BWF](https://en.wikipedia.org/wiki/Broadcast_Wave_Format)                | Extended WAV format for broadcast and archiving           |                                                                                                  |
-| [DSDIFF](https://wikipedia.org/wiki/Direct_Stream_Digital)                | Philips DSDIFF                                            | <img src="./image/logo-DSD.svg" width="80" alt="DSD logo">                                       |
-| [DSF](https://wikipedia.org/wiki/Direct_Stream_Digital)                   | Sony's DSD Stream File                                    | <img src="./image/logo-DSD.svg" width="80" alt="DSD logo">                                       |
-| [FLAC](https://wikipedia.org/wiki/FLAC)                                   | Free Lossless Audio Codec                                 | <img src="./image/logo-FLAC.svg" width="80" alt="FLAC logo">                                     |
-| [MP2](https://wikipedia.org/wiki/MPEG-1_Audio_Layer_II)                   | MPEG-1 Audio Layer II (predecessor to MP3)                |                                                                                                  |
-| [Matroska](https://wikipedia.org/wiki/Matroska)                           | Matroska (EBML), mka, mkv                                 | <img src="./image/logo-Matroska_2010.svg" width="80" alt="Matroska logo">                        |
-| [MP3](https://wikipedia.org/wiki/MP3)                                     | MPEG-1 / MPEG-2 Audio Layer III                           | <img src="./image/logo-Mp3.svg" width="80" alt="MP3 logo">                                     |
-| [MPC](https://wikipedia.org/wiki/Musepack)                                | Musepack SV7                                              | <img src="./image/logo-Musepack.svg" width="80" alt="musepack logo">                             |
-| [MPEG 4](https://wikipedia.org/wiki/MPEG-4)                               | mp4, m4a, m4v                                             | <img src="./image/logo-MPEG4-350581.svg" width="80" alt="mpeg 4 logo">                           |
-| [Ogg](https://en.wikipedia.org/wiki/Ogg)                                  | Open container format                                     | <img src="./image/logo-Ogg.svg" width="80" alt="Ogg logo">                                       |
-| [Opus](https://wikipedia.org/wiki/Opus_(audio_format))                    | Low-latency, high-quality codec for speech and music      | <img src="./image/logo-Opus.svg" width="80" alt="Opus logo">                                     |
-| [Speex](https://wikipedia.org/wiki/Speex)                                 | Open-source speech codec optimized for VoIP               | <img src="./image/logo-Speex_2006.svg" width="80" alt="Speex logo">                              |
-| [Theora](https://en.wikipedia.org/wiki/Theora)                            | Open video compression format (typically paired with Ogg) | <img src="./image/logo-Theora_2007.svg" width="70" alt="Theora logo">                            |
-| [Vorbis](https://wikipedia.org/wiki/Ogg_Vorbis)                           | Vorbis audio compression                                  | <img src="./image/logo-Vorbis_many_fish_2005.svg" width="70" alt="Vorbis logo">                 |
-| [WAV](https://wikipedia.org/wiki/WAV)                                     | Uncompressed PCM audio in RIFF container                  |                                                                                                  |
-| [WebM](https://wikipedia.org/wiki/WebM)                                   | WebM                                                      | <img src="./image/logo-WebM.svg" width="80" alt="Matroska logo">                                 |
-| [WV](https://wikipedia.org/wiki/WavPack)                                  | WavPack                                                   | <img src="./image/logo-wavpack.svg" width="60" alt="WavPack logo">                               |
-| [WMA](https://wikipedia.org/wiki/Windows_Media_Audio)                     | Windows Media Audio                                       | <img src="./image/logo-Windows_Media_Player_simplified.svg" width="40" alt="Windows Media logo"> |
-
-### Supported tag headers
-
-Following tag header formats are supported:
-- [APE](https://wikipedia.org/wiki/APE_tag)
-- [ASF](https://wikipedia.org/wiki/Advanced_Systems_Format)
-- EXIF 2.3
-- [ID3](https://wikipedia.org/wiki/ID3): ID3v1, ID3v1.1, ID3v2.2, [ID3v2.3](http://id3.org/id3v2.3.0), [ID3v2.4](http://id3.org/id3v2.4.0-frames) and [ID3v2 Chapters 1.0](https://mutagen-specs.readthedocs.io/en/latest/id3/id3v2-chapters-1.0.html)
-- [iTunes](https://github.com/sergiomb2/libmp4v2/wiki/iTunesMetadata)
-- [RIFF](https://wikipedia.org/wiki/Resource_Interchange_File_Format)/INFO
-- [Vorbis comment](https://wikipedia.org/wiki/Vorbis_comment)
-- [AIFF](https://wikipedia.org/wiki/Audio_Interchange_File_Format)
- 
-Following lyric formats are supported:
-- [LRC](https://en.wikipedia.org/wiki/LRC_(file_format))
-- Synchronized lyrics (SYLT)
-- Unsynchronized lyrics (USLT)
-
-Support for [MusicBrainz](https://musicbrainz.org/) tags as written by [Picard](https://picard.musicbrainz.org/).
-[ReplayGain](https://wiki.hydrogenaud.io/index.php?title=ReplayGain) tags are supported.
-
-### Audio format & encoding details
-
-Support for encoding / format details:
-- [Bit rate](https://wikipedia.org/wiki/Bit_rate)
-- [Audio bit depth](https://wikipedia.org/wiki/Audio_bit_depth)
-- Duration
-- Encoding profile (e.g. [CBR](https://en.wikipedia.org/wiki/Constant_bitrate), V0, V2)
-
-
-## Online demo's
-- [<img src="https://raw.githubusercontent.com/Borewit/audio-tag-analyzer/master/src/assets/icon/audio-tag-analyzer.svg" width="40">Audio Tag Analyzer](https://audio-tag-analyzer.netlify.app/)
-- [<img src="https://cdn.sanity.io/images/3do82whm/next/ba8c847f13a5fa39d88f8bc9b7846b7886531b18-2500x2500.svg" width="40"> Webamp](https://webamp.org/)
-- [ICY Radio Stream Player](https://icy-radio-stream-player.netlify.app/)
-- Expected to be released soon: [Overtone](https://overtone.pro/) by [Johannes Schickling](https://github.com/schickling)
+```bash
+npm install lru-cache --save
+```
 
 ## Usage
 
-### Installation
-Install using [npm](http://npmjs.org/):
-
-```bash
-npm install music-metadata
-```
-or using [yarn](https://yarnpkg.com/):
-```bash
-yarn add music-metadata
-```
-
-## API Documentation
-
-### Overview
-
-**Node.js specific** functions to read an audio file or stream:
-1. **File Parsing**: Parse audio files directly from the filesystem using the [parseFile function](#parsefile-function)
-1. **Stream Parsing**: Parse audio metadata from a Node.js [Readable stream](https://nodejs.org/api/stream.html#class-streamreadable) using the [parseStream function](#parsestream-function).
-
-**Cross-platform** functions available to read an audio file or stream:
-
-There are multiple ways to parse (read) audio tracks:
-1. **Web Stream Parsing**: Parse audio data from a web-compatible [ReadableStream](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/ReadableStream) using the [parseWebStream function](#parsewebstream-function).
-1. **Blob Parsing**: Parse audio metadata from a (Web API) [Blob](https://developer.mozilla.org/docs/Web/API/Blob) or [File](https://developer.mozilla.org/docs/Web/API/File) using the [parseBlob function](#parseblob-function).
-1. **Buffer Parsing**: Parse audio metadata from a [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) or [Buffer](https://nodejs.org/api/buffer.html) using the [parseBuffer function](#parsebuffer-function).
-1. **Tokenizer Parsing:** Use a custom or third-party [strtok3](https://github.com/Borewit/strtok3) `ITokenizer` to parse using the [parseFromTokenizer function](#parsefromtokenizer-function).
-
-> [!NOTE]
-> Direct file access in Node.js is generally faster because it can 'jump' to various parts of the file without reading intermediate data.
-
-### Node.js specific functions
-These functions use Node.js-specific APIs,
-making them incompatible with browser-based JavaScript engines.
-
-#### `parseFile` function
-
-The `parseFile` function is intended for extracting metadata from audio files on the local filesystem in a Node.js environment.
-It reads the specified file, parses its audio metadata, and returns a promise that resolves with this information.
-
-##### Syntax
-```ts
-parseFile(filePath: string, options?: IOptions): Promise<IAudioMetadata>
-```
-
-##### Parameters
-
-- `filePath`: `string`
-
-  The path to the media file from which metadata should be extracted.
-  This should be a valid path to an audio file on the local filesystem.
-
-- `options`: [IOptions](#ioptions-interface) (optional)
-
-  An optional configuration object that allows customization of the parsing process.
-  These options can include whether to calculate the file's duration, skip embedded cover art, 
-  or other parsing behaviors.
-
-##### Returns
-
-- `Promise<IAudioMetadata>`: 
-
-  A promise that resolves to an IAudioMetadata object containing metadata about the audio file.
-  The metadata includes details such as the file format, codec, duration, bit rate, and any embedded tags like album, artist, or track information.
-
-##### Usage Notes
-
-- This function is **Node.js-only** and relies on Node.js-specific APIs to access the filesystem.
-
-- For browser environments, consider using the [parseBlob](#parseblob-function) to parse [File object](https://developer.mozilla.org/en-US/docs/Web/API/File) objects.
-
-##### Example:
-
-The following example demonstrates how to use the parseFile function to read metadata from an audio file:
 ```js
-import { parseFile } from 'music-metadata';
-import { inspect } from 'node:util';
-
-(async () => {
-  try {
-    const filePath = 'test/samples/MusicBrainz - Beth Hart - Sinner\'s Prayer [id3v2.3].V2.mp3';
-    const metadata = await parseFile(filePath);
-
-    // Output the parsed metadata to the console in a readable format
-    console.log(inspect(metadata, { showHidden: false, depth: null }));
-  } catch (error) {
-    console.error('Error parsing metadata:', error.message);
-  }
-})();
-```
-
-#### `parseStream` function
-
-The parseStream function is used to parse metadata from an audio track provided as a Node.js [`Readable`](https://nodejs.org/api/stream.html#class-streamreadable) stream.
-This is particularly useful for processing audio data that is being streamed or piped from another source, such as a web server or file system.
-
-##### Syntax:
-```ts
-parseStream(stream: Readable, fileInfo?: IFileInfo | string, options?: IOptions): Promise<IAudioMetadata>
-```
-
-##### Parameters:
-
-- `stream`: `Readable`:
-  
-  The Node.js [Readable](https://nodejs.org/api/stream.html#class-streamreadable) stream from which the audio data is read.
-  This stream should provide the raw audio data to be analyzed.
-
-- `fileInfo`: `IFileInfo` (optional)
-
-  An object containing file-related information or a string representing the MIME-type of the audio stream.
-  The fileInfo parameter can help the parser to correctly identify the audio format and may include:
-
-  - `mimeType`: A string representing the [MIME-type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types) (e.g., `audio/mpeg`).
-    
-    If provided, it is assumed the streamed file content is to be the MIME-type. 
-    If not provided, the parser will attempt to determine the format based on the content of the stream.
-  
-  - `size`: The total size of the audio stream in bytes (useful for streams with a known length).
-  
-  - `path`: A string representing the file path or filename, which can also assist in determining the format.
-
-- `options`: `IOptions` (optional)
-  
-  An optional object containing additional parsing options.
-  These options allow you to customize the parsing process,
-  such as whether to calculate the duration or skip cover art extraction.
-
-##### Returns
-
-- `Promise<IAudioMetadata>`:
- 
-  A promise that resolves to an `IAudioMetadata` object containing detailed metadata about the audio stream.
-  This metadata includes information about the format, codec, duration, bitrate, and any embedded tags such as artist, album, or track information.
-
-##### Usage Notes
-- This function is only available in Node.js environments, as it relies on the [Node.js stream API](https://nodejs.org/api/stream.html).
-
-##### Example:
-
-The following example demonstrates how to use the `parseStream` function to read metadata from an audio stream:
-```js
-import { parseStream } from 'music-metadata';
-import { createReadStream } from 'fs';
-
-(async () => {
-  try {
-    // Create a readable stream from a file
-    const audioStream = createReadStream('path/to/audio/file.mp3');
-
-    // Parse the metadata from the stream
-    const metadata = await parseStream(audioStream, { mimeType: 'audio/mpeg'});
-
-    // Log the parsed metadata
-    console.log(metadata);
-  } catch (error) {
-    console.error('Error parsing metadata:', error.message);
-  }
-})();
-
-```
-
-### Cross-platform functions
-These functions are designed to be cross-platform,
-meaning they can be used in both Node.js and web browsers.
-
-#### `parseWebStream` function
-
-The parseWebStream function is used to extract metadata from an audio track provided as a web-compatible ReadableStream.
-This function is ideal for applications running in web environments, such as browsers,
-where audio data is streamed over the network or read from other web-based sources.
-
-
-##### Syntax
-```ts
-parseWebStream(webStream: ReadableStream<Uint8Array>, fileInfo?: IFileInfo | string, options?: IOptions): Promise<IAudioMetadata>
-```
-
-##### Parameters
-
-- `webStream`: `ReadableStream<Uint8Array>`
-
-  A [ReadableStream](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/ReadableStream) that provides the audio data to be parsed.
-  This stream should emit Uint8Array chunks, representing the raw audio data.
-
-- `fileInfo`: `IFileInfo` (optional)
-
-  An object containing file-related information or a string representing the MIME-type of the audio stream.
-  The fileInfo parameter can help the parser to correctly identify the audio format and may include:
-
-  - `mimeType`: A string representing the [MIME-type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types) (e.g., `audio/mpeg`).
-
-    If provided, it is assumed the streamed file content is to be the MIME-type.
-    If not provided, the parser will attempt to determine the format based on the content of the stream.
-
-  - `size`: The total size of the audio stream in bytes (useful for streams with a known length).
-
-  - `path`: A string representing the file path or filename, which can also assist in determining the format.
-
-- `options`: `IOptions` (optional)
-
-  An optional object containing additional parsing options.
-  These options allow you to customize the parsing process,
-  such as whether to calculate the duration or skip cover art extraction.
-
-##### Returns
-
-- `Promise<IAudioMetadata>`:
-
-  A promise that resolves to an `IAudioMetadata` object containing detailed metadata about the audio stream.
-  This metadata includes information about the format, codec, duration, bitrate, and any embedded tags such as artist, album, or track information.
-
-##### Example
-Here’s an example of how to use the `parseWebStream` function to extract metadata from an audio stream in a web application:
-
-```js
-import { parseWebStream } from 'music-metadata';
-
-(async () => {
-  try {
-    // Fetch the audio file
-    const response = await fetch('https://github.com/Borewit/test-audio/raw/refs/heads/master/Various%20Artists%20-%202008%20-%20netBloc%20Vol%2013%20-%20Color%20in%20a%20World%20of%20Monochrome%20%5BAAC-40%5D/1.02.%20Solid%20Ground.m4a');
-
-    // Extract the Content-Length header and convert it to a number
-    const contentLength = response.headers.get('Content-Length');
-    const size = contentLength ? parseInt(contentLength, 10) : undefined;
-
-    // Parse the metadata from the web stream
-    const metadata = await parseWebStream(response.body, {
-      mimeType: response.headers.get('Content-Type'),
-      size // Important to pass the content-length
-    });
-
-    console.log(metadata);
-  } catch (error) {
-    console.error('Error parsing metadata:', error.message);
-  }
-})();
-```
-
-The example uses the [`fetch` API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) to retrieve an audio file from a URL.
-The `response.body` provides a [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/ReadableStream) that is then passed to `parseWebStream`.
-
-#### `parseBlob` function
-
-Parses metadata from an audio file represented as a [Blob](https://developer.mozilla.org/en-US/docs/Web/API/Blob). 
-This function reads slices of the Blob and supports both browser File objects and Node.js Blob objects.
-
-##### Syntax
-```ts
-parseBlob(blob: Blob, options?: IOptions): Promise<IAudioMetadata>
-```
-
-##### Parameters
- 
-- `blob`: [Blob](https://developer.mozilla.org/en-US/docs/Web/API/Blob)
-  
-  The Blob object containing the audio data to be parsed.
-  This can be a File selected by the user or a Blob containing audio data. The Blob size and MIME type are passed to the parser.
-
-- `options`: [IOptions](#ioptions-interface) (optional)
-  
-  An optional configuration object that specifies parsing options.
-
-##### Returns 
-
-- `Promise<IAudioMetadata>`:
-
-  A promise that resolves to the metadata of the audio file.
-
-##### Example
-
-```js
-import { parseBlob } from 'music-metadata';
-
-(async () => {
-  const fileInput = document.querySelector('input[type="file"]');
-  const file = fileInput.files[0];
-  
-  try {
-    const metadata = await parseBlob(file);
-    console.log(metadata);
-  } catch (error) {
-    console.error('Error parsing metadata:', error.message);
-  }
-})();
-```
-
-#### `parseBuffer` function
-
-Parses metadata from an audio file where the audio data is held in a [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) or [Buffer](https://nodejs.org/api/buffer.html).
-This function is particularly useful when you already have audio data in memory.
-
-##### Syntax
-```ts
-parseBuffer(uint8Array: Uint8Array, fileInfo?: IFileInfo | string, options?: IOptions): Promise<IAudioMetadata>
-```
-
-##### Parameters
-- `uint8Array`: [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array)
-
-  A [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) containing the audio data to be parsed.
-
-- `fileInfo`: `IFileInfo` | `string` (optional)
-  
-  An object containing file information such as mimeType and size.
-  Alternatively, you can pass a MIME-type string directly.
-  This helps the parser understand the format of the audio data.
-
-- `options`: [IOptions](#ioptions-interface) (optional)
-
-  An optional configuration object that specifies parsing options.
-
-##### Returns
-- `Promise<IAudioMetadata>`:
-  
-  A promise that resolves to the metadata of the audio file.
-
-
-##### Example
-
-```js
-import { parseBuffer } from 'music-metadata';
-import fs from 'fs';
-
-(async () => {
-  const buffer = fs.readFileSync('path/to/audio/file.mp3');
-
-  try {
-    const metadata = await parseBuffer(buffer, { mimeType: 'audio/mpeg' });
-    console.log(metadata);
-  } catch (error) {
-    console.error('Error parsing metadata:', error.message);
-  }
-})();
-```
-
-#### `parseFromTokenizer` function
-Parses metadata from an audio source that implements the [strtok3](https://github.com/Borewit/strtok3) ITokenizer interface.
-This is a low-level function that provides flexibility for advanced use cases,
-such as parsing metadata from streaming audio or custom data sources.
-
-This also enables special read modules like:
-- [streaming-http-token-reader](https://github.com/Borewit/streaming-http-token-reader) for chunked HTTP(S) reading, using [HTTP range requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests).
-
-##### Syntax
-```ts
-parseFromTokenizer(tokenizer: ITokenizer, options?: IOptions): Promise<IAudioMetadata>
-```
-
-##### Parameters
-- `tokenizer: ITokenizer`
-
-  An instance of an ITokenizer that provides access to the audio data.
-  The tokenizer abstracts the reading process, enabling support for various types of sources, including streams, buffers, or custom data readers.
-
-- `options`: [IOptions](#ioptions-interface) (optional)
-
-  An optional configuration object that specifies parsing options.
-
-##### Returns
-- `Promise<IAudioMetadata>`:
-
-  A promise that resolves to the metadata of the audio source, including information like the title, artist, album, and more.
-
-
-##### Example
-````js
-import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
-import { S3Client } from '@aws-sdk/client-s3';
-import { makeTokenizer } from '@tokenizer/s3';
-import { parseFromTokenizer as mmParseFromTokenizer } from 'music-metadata';
-
-// Configure the S3 client
-const s3 = new S3Client({
-  region: 'eu-west-2',
-  credentials: fromNodeProviderChain(),
-});
-
-// Helper function to create a tokenizer for S3 objects
-async function makeS3TestDataTokenizer(key, options) {
-  return await makeTokenizer(s3, {
-    Bucket: 'music-metadata',
-    Key: key,
-  }, options);
+// hybrid module, either works
+import { LRUCache } from 'lru-cache'
+// or:
+const { LRUCache } = require('lru-cache')
+// or in minified form for web browsers:
+import { LRUCache } from 'http://unpkg.com/lru-cache@9/dist/mjs/index.min.mjs'
+
+// At least one of 'max', 'ttl', or 'maxSize' is required, to prevent
+// unsafe unbounded storage.
+//
+// In most cases, it's best to specify a max for performance, so all
+// the required memory allocation is done up-front.
+//
+// All the other options are optional, see the sections below for
+// documentation on what each one does.  Most of them can be
+// overridden for specific items in get()/set()
+const options = {
+  max: 500,
+
+  // for use with tracking overall storage size
+  maxSize: 5000,
+  sizeCalculation: (value, key) => {
+    return 1
+  },
+
+  // for use when you need to clean up something when objects
+  // are evicted from the cache
+  dispose: (value, key, reason) => {
+    freeFromMemoryOrWhatever(value)
+  },
+
+  // for use when you need to know that an item is being inserted
+  // note that this does NOT allow you to prevent the insertion,
+  // it just allows you to know about it.
+  onInsert: (value, key, reason) => {
+    logInsertionOrWhatever(key, value)
+  },
+
+  // how long to live in ms
+  ttl: 1000 * 60 * 5,
+
+  // return stale items before removing from cache?
+  allowStale: false,
+
+  updateAgeOnGet: false,
+  updateAgeOnHas: false,
+
+  // async method to use for cache.fetch(), for
+  // stale-while-revalidate type of behavior
+  fetchMethod: async (key, staleValue, { options, signal, context }) => {},
 }
 
-// Function to read and log metadata from an S3 object
-async function readMetadata() {
-  try {
-    // Create a tokenizer for the specified S3 object
-    const tokenizer = await makeS3TestDataTokenizer('path/to/audio/file.mp3', { disableChunked: false });
+const cache = new LRUCache(options)
 
-    // Parse the metadata from the tokenizer
-    const metadata = await mmParseFromTokenizer(tokenizer);
+cache.set('key', 'value')
+cache.get('key') // "value"
 
-    // Log the retrieved metadata
-    console.log(metadata);
-  } catch (error) {
-    console.error('Error parsing metadata:', error.message);
-  }
-}
+// non-string keys ARE fully supported
+// but note that it must be THE SAME object, not
+// just a JSON-equivalent object.
+var someObject = { a: 1 }
+cache.set(someObject, 'a value')
+// Object keys are not toString()-ed
+cache.set('[object Object]', 'a different value')
+assert.equal(cache.get(someObject), 'a value')
+// A similar object with same keys/values won't work,
+// because it's a different object identity
+assert.equal(cache.get({ a: 1 }), undefined)
 
-// Execute the metadata reading function
-readMetadata();
-````
-##### Additional Resources
-- [strtok3](https://github.com/Borewit/strtok3) - Learn more about the `ITokenizer` interface and how to implement it for various use cases.
-- [AWS SDK for JavaScript](https://aws.amazon.com/sdk-for-javascript/) - Documentation on using the AWS SDK to interact with S3 and other AWS services.
-- [@tokenizer/s3](https://github.com/Borewit/tokenizer-s3) - Example of `ITokenizer` implementation.
-
-### Handling Parse Errors
-
-`music-metadata` exports custom error classes that extend JavaScript `Error`.
-Parsing can also reject with other errors, such as filesystem, stream, or tokenizer errors.
-Handle caught values as `unknown` in TypeScript and narrow them before accessing error properties.
-
-#### Union of Parse Errors 
-
-The `UnionOfParseErrors` type groups the following library error classes; it does not describe every possible rejection:
-```ts
-export type UnionOfParseErrors =
-  | CouldNotDetermineFileTypeError
-  | UnsupportedFileTypeError
-  | UnexpectedFileContentError
-  | FieldDecodingError
-  | InternalParserError;
+cache.clear() // empty the cache
 ```
 
-#### Error Types
- 
-- `CouldNotDetermineFileTypeError`: Raised when the file type cannot be determined.
-- `UnsupportedFileTypeError`: Raised when an unsupported file type is encountered.
-- `UnexpectedFileContentError`: Raised when the file content does not match the expected format.
-- `FieldDecodingError`: Raised when a specific field in the file cannot be decoded.
-- `InternalParserError`: Raised for internal parser errors.
+If you put more stuff in the cache, then less recently used items
+will fall out. That's what an LRU cache is.
 
-### Other functions
+For full description of the API and all options, please see [the
+LRUCache typedocs](https://isaacs.github.io/node-lru-cache/)
 
-#### `orderTags` function
+## Storage Bounds Safety
 
-Converts an array of native tags to a dictionary keyed by tag identifier. Each value is an array of tag values.
+This implementation aims to be as flexible as possible, within
+the limits of safe memory consumption and optimal performance.
 
-```ts
-orderTags(nativeTags: ITag[]): INativeTagDict
-```
+At initial object creation, storage is allocated for `max` items.
+If `max` is set to zero, then some performance is lost, and item
+count is unbounded. Either `maxSize` or `ttl` _must_ be set if
+`max` is not specified.
+
+If `maxSize` is set, then this creates a safe limit on the
+maximum storage consumed, but without the performance benefits of
+pre-allocation. When `maxSize` is set, every item _must_ provide
+a size, either via the `sizeCalculation` method provided to the
+constructor, or via a `size` or `sizeCalculation` option provided
+to `cache.set()`. The size of every item _must_ be a positive
+integer.
+
+If neither `max` nor `maxSize` are set, then `ttl` tracking must
+be enabled. Note that, even when tracking item `ttl`, items are
+_not_ preemptively deleted when they become stale, unless
+`ttlAutopurge` is enabled. Instead, they are only purged the
+next time the key is requested. Thus, if `ttlAutopurge`, `max`,
+and `maxSize` are all not set, then the cache will potentially
+grow unbounded.
+
+In this case, a warning is printed to standard error. Future
+versions may require the use of `ttlAutopurge` if `max` and
+`maxSize` are not specified.
+
+If you truly wish to use a cache that is bound _only_ by TTL
+expiration, consider using a `Map` object, and calling
+`setTimeout` to delete entries when they expire. It will perform
+much better than an LRU cache.
+
+Here is an implementation you may use, under the same
+[license](./LICENSE) as this package:
 
 ```js
-import { parseFile, orderTags } from 'music-metadata';
-import { inspect } from 'util';
-
-(async () => {
-  try {
-    const metadata = await parseFile('../test/samples/MusicBrainz - Beth Hart - Sinner\'s Prayer [id3v2.3].V2.mp3');
-    const orderedTags = orderTags(metadata.native['ID3v2.3']);
-    console.log(inspect(orderedTags, { showHidden: false, depth: null }));
-  } catch (error) {
-    console.error(error.message);
-  }
-})();
-```
-
-#### `ratingToStars` function
-
-   Can be used to convert the normalized rating value to the 0..5 stars, where 0 an undefined rating, 1 the star the lowest rating and 5 the highest rating.
-
-   ```ts
-   ratingToStars(rating: number | undefined): number
-   ```
-#### `selectCover` function
-
-Select cover image based on image type field, otherwise the first picture in file.
-
-```ts
-export function selectCover(pictures?: IPicture[]): IPicture | null
-```
-
-```js
-import { parseFile, selectCover } from 'music-metadata';
-
-(async () => {
-  const {common} = await parseFile(filePath);
-  const cover = selectCover(common.picture); // pick the cover image
-}
-)();
- ```
-
-#### `getSupportedMimeTypes` function
-
-Returns a list of supported MIME-types. This may include some MIME-types which are not formally recognized.
-
-### `IOptions` Interface
-- `duration`: `boolean` (default: `false`)
-
-  When `true`, the parser will read the entire media file _if necessary_ to determine the duration.
-  This is only applicable in cases where duration cannot be reliably inferred without full file analysis.
-  Note that enabling this option **does not guarantee** that duration will be available,
-  only that the parser will attempt to calculate it when possible, even if it requires reading the full file.
-
-- `includeChapters`: `boolean` (default: `false`)
-  When `true`, the MP4 parser scans the `mdat` atom for chapters.
-
-- `mkvUseIndex`: `boolean` (default: `false`)
-
-  When `true`, the parser uses the SeekHead index in Matroska (MKV) files to skip segment and cluster elements.
-  This experimental feature can improve performance, but:
-  - Metadata not listed in the SeekHead may be skipped.
-  - If the SeekHead is missing, this option has no effect.
-
-- `observer`: `(update: IMetadataEvent) => void`:
-
-  Callback function triggered when common tags or format properties are updated during parsing.
-  Allows real-time monitoring of metadata as it becomes available.
- 
-- `skipCovers`: `boolean` (default: `false`)
-
-  When `true`, embedded cover art (images) will not be extracted.
-  Useful for reducing memory and processing when cover images are unnecessary.
- 
-- `skipPostHeaders`: `boolean` (default: `false`)
-  When `true`, tag headers located at the end of the file will not be read.
-  This is particularly beneficial for streaming input, as it avoids the need to read the entire stream.
-
-> [!NOTE]
-> - `format.duration` may be available without enabling `duration`. Set `duration: true` to allow additional scanning when needed; duration can still be unavailable.
-> - Using `mkvUseIndex` can improve performance in Matroska files, but be aware of potential side effects, such as missing metadata due to skipped elements.
-
-
-### `IAudioMetadata` interface
-
-If the returned promise resolves, the metadata (TypeScript `IAudioMetadata` interface) contains:
-- [`metadata.format`](#metadataformat) Audio format information
-- [`metadata.common`](#metadatacommon) Is a generic (abstract) way of reading metadata information.
-- [`metadata.format.trackInfo`](#metadataformattrackinfo) Describes individual audio and video tracks when available.
-- `metadata.native` Maps each tag format to an array of native (original) tags found in the parsed audio file.
-- `metadata.quality.warnings` Contains non-fatal parsing warnings, each with a `message` string.
-
-#### `metadata.format`
-
-The questionmark `?` indicates the property is optional.
-
-Audio format information. Defined in the TypeScript `IFormat` interface:
-- `format.container?: string` Audio encoding format. e.g.: 'flac'
-- `format.codec?` Name of the codec (algorithm used for the audio compression)
-- `format.codecProfile?: string` Codec profile / settings
-- `format.tagTypes?: TagType[]`  List of tagging formats found in parsed audio file
-- `format.duration?: number` Duration in seconds
-- `format.bitrate?: number` Number bits per second of encoded audio file
-- `format.sampleRate?: number` Sampling rate in Samples per second (S/s)
-- `format.bitsPerSample?: number` Audio bit depth
-- `format.lossless?: boolean` True if lossless,  false for lossy encoding
-- `format.numberOfChannels?: number` Number of audio channels
-- `format.creationTime?: Date` Track creation time
-- `format.modificationTime?: Date` Track modification / tag update time
-- `format.trackGain?: number` Track gain in dB
-- `format.albumGain?: number` Album gain in dB
-
-#### `metadata.format.trackInfo`
-
-Containers such as Matroska and MPEG-4 can contain multiple audio and video tracks.
-The experimental `metadata.format.trackInfo` property describes these individual tracks.
-
-`metadata.format.trackInfo` is an array of [trackInfo](#trackinfo) objects, empty when no track information is available.
-
-##### trackInfo
-
-Individual track information. Defined in the TypeScript `ITrackInfo` interface:
-- `trackInfo.type?: TrackType` Track type
-- `trackInfo.codecName?: string` Codec name
-- `trackInfo.codecSettings?: string` Codec settings
-- `trackInfo.flagEnabled?: boolean` Set if the track is usable, default: `true`
-- `trackInfo.flagDefault?: boolean` Set if that track (audio, video or subs) SHOULD be active if no language found matches the user preference.
-- `trackInfo.flagLacing?: boolean` Set if the track **may** contain blocks using lacing
-- `trackInfo.name?: string` A human-readable track name.
-- `trackInfo.language?: string` Specifies the language of the track
-- `trackInfo.audio?: IAudioTrack`, see [`trackInfo.audioTrack`](#trackinfoaudiotrack)
-- `trackInfo.video?: IVideoTrack`, see [`trackInfo.videoTrack`](#trackinfovideotrack)
-
-##### `trackInfo.audioTrack`
-
-- `audioTrack.samplingFrequency?: number`
-- `audioTrack.outputSamplingFrequency?: number`
-- `audioTrack.channels?: number`
-- `audioTrack.channelPositions?: Uint8Array`
-- `audioTrack.bitDepth?: number`
-
-##### `trackInfo.videoTrack`
-
-- `videoTrack.flagInterlaced?: boolean`
-- `videoTrack.stereoMode?: number`
-- `videoTrack.pixelWidth?: number`
-- `videoTrack.pixelHeight?: number`
-- `videoTrack.displayWidth?: number`
-- `videoTrack.displayHeight?: number`
-- `videoTrack.displayUnit?: number`
-- `videoTrack.aspectRatioType?: number`
-- `videoTrack.colourSpace?: Uint8Array`
-- `videoTrack.gammaValue?: number`
-
-#### `metadata.common`
-
-[Common tag documentation](doc/common_metadata.md) is automatically generated.
-
-## Examples
-
-In order to read the duration of a stream (with the exception of file streams), in some cases you should pass the size of the file in bytes.
-```js
-import { parseStream } from 'music-metadata';
-import { inspect } from 'util';
-
-(async () => {
-    const metadata = await parseStream(someReadStream, {mimeType: 'audio/mpeg', size: 26838}, {duration: true});
-    console.log(inspect(metadata, {showHidden: false, depth: null}));
-    someReadStream.close();
-  }
-)();
-```
-
-### Access cover art
-
-Via `metadata.common.picture` you can access an array of cover art if present.
-Each picture has this interface:
-
-```ts
-/**
- * Attached picture, typically used for cover art
- */
-export interface IPicture {
-  /**
-   * Image mime type
-   */
-  format: string;
-  /**
-   * Image data
-   */
-  data: Uint8Array;
-  /**
-   * Optional description
-   */
-  description?: string;
-  /**
-   * Picture type
-   */
-  type?: string;
-}
-```
-
-To assign `img` HTML-object you can do something like:
-```js
-import {uint8ArrayToBase64} from 'uint8array-extras';
-
-img.src = `data:${picture.format};base64,${uint8ArrayToBase64(picture.data)}`;
-```
-
-## Dependencies
-
-Dependency diagram:
-```mermaid
-graph TD;
-    MMN("music-metadata (Node.js entry point)")-->MMP
-    MMN-->FTN
-    MMP("music-metadata (primary entry point)")-->S(strtok3)
-    MMP-->TY(token-types)
-    MMP-->FTP
-    MMP-->UAE
-    FTN("file-type (Node.js entry point)")-->FTP
-    FTP("file-type (primary entry point)")-->S
-    S(strtok3)-->TO("@tokenizer/token")
-    TY(token-types)-->TO
-    TY-->IE("ieee754")
-    FTP-->TY
-    NS("node:stream")
-    FTN-->NS
-    FTP-->UAE(uint8array-extras)
-    style NS fill:#F88,stroke:#A44
-    style IE fill:#CCC,stroke:#888
-    style FTN fill:#FAA,stroke:#A44
-    style MMN fill:#FAA,stroke:#A44
-```
-
-Dependency list:
-- [tokenizer-token](https://github.com/Borewit/tokenizer-token)
-- [strtok3](https://github.com/Borewit/strtok3)
-- [token-types](https://github.com/Borewit/token-types)
-- [file-type](https://github.com/sindresorhus/file-type)
-- [@tokenizer-token](https://github.com/Borewit/tokenizer-token)
-
-## CommonJS backward compatibility
-
-Using Node.js ≥ 22, which is support loading ESM module via require 
-```js
-const mm = require('music-metadata');
-```
-
-For older Node.js version < 22, you need to dynamically import **music-metadata**:
-```js
-(async () => {
-  // Dynamically loads the ESM module in a CommonJS project
-  const mm = await import('music-metadata');
-})();
-```
-
-For CommonJS TypeScript projects, I recommend to avoid using `commonjs` for the TypeScript compiler `module` option, 
-and either use `node16` or `nodenext`, which enable utilizing [dynamic import](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/import).
-
-If you do want to use the classic `commonjs` option, this is how you can get the _dynamic import_ to work.
-
-```js
-import {loadEsm} from 'load-esm';
-
-(async () => {
-  // Dynamically loads the ESM module in a CommonJS project
-  const mm = await loadEsm<typeof import('music-metadata')>('music-metadata');
-})();
-```
-
-When you use Node.js version ≥ 22, which supports loading ESM modules via require, this compensates for that issue.
-
-## Frequently Asked Questions
-
-###  How can I traverse (a long) list of files?
-
-What is important that file parsing should be done in a sequential manner.
-In a plain loop, due to the asynchronous character (like most JavaScript functions), it would cause all the files to run in parallel which is will cause your application to hang in no time.
-There are multiple ways of achieving this:
-
-1.  Using recursion
-
-    ```js
-    import { parseFile } from 'music-metadata';
-
-    function parseFiles(audioFiles) {
-
-      const audioFile = audioFiles.shift();
-
-      if (audioFile) {
-        return parseFile(audioFile).then(metadata => {
-          // Do great things with the metadata
-          return parseFiles(audioFiles); // process rest of the files AFTER we are finished
-        })
-      }
+// a storage-unbounded ttl cache that is not an lru-cache
+const cache = {
+  data: new Map(),
+  timers: new Map(),
+  set: (k, v, ttl) => {
+    if (cache.timers.has(k)) {
+      clearTimeout(cache.timers.get(k))
     }
+    cache.timers.set(
+      k,
+      setTimeout(() => cache.delete(k), ttl),
+    )
+    cache.data.set(k, v)
+  },
+  get: k => cache.data.get(k),
+  has: k => cache.data.has(k),
+  delete: k => {
+    if (cache.timers.has(k)) {
+      clearTimeout(cache.timers.get(k))
+    }
+    cache.timers.delete(k)
+    return cache.data.delete(k)
+  },
+  clear: () => {
+    cache.data.clear()
+    for (const v of cache.timers.values()) {
+      clearTimeout(v)
+    }
+    cache.timers.clear()
+  },
+}
+```
 
-    ```
+If that isn't to your liking, check out
+[@isaacs/ttlcache](http://npm.im/@isaacs/ttlcache).
 
-1. Use async/await
+## Storing Undefined Values
 
-   Use [async/await](https://javascript.info/async-await)
+This cache never stores undefined values, as `undefined` is used
+internally in a few places to indicate that a key is not in the
+cache.
 
-   ```js
-   import { parseFile } from 'music-metadata';
+You may call `cache.set(key, undefined)`, but this is just
+an alias for `cache.delete(key)`. Note that this has the effect
+that `cache.has(key)` will return _false_ after setting it to
+undefined.
 
-   // it is required to declare the function 'async' to allow the use of await
-   async function parseFiles(audioFiles) {
+```js
+cache.set(myKey, undefined)
+cache.has(myKey) // false!
+```
 
-       for (const audioFile of audioFiles) {
+If you need to track `undefined` values, and still note that the
+key is in the cache, an easy workaround is to use a sigil object
+of your own.
 
-           // await will ensure the metadata parsing is completed before we move on to the next file
-           const metadata = await parseFile(audioFile);
-           // Do great things with the metadata
-       }
-   }
-   ```
+```js
+import { LRUCache } from 'lru-cache'
+const undefinedValue = Symbol('undefined')
+const cache = new LRUCache(...)
+const mySet = (key, value) =>
+  cache.set(key, value === undefined ? undefinedValue : value)
+const myGet = (key, value) => {
+  const v = cache.get(key)
+  return v === undefinedValue ? undefined : v
+}
+```
 
-### Using music-metadata with TypeScript and module-resolution set to bundler.
+## Tracing and Observability
 
-If the TypeScript compiler option [`moduleResolution`](https://www.typescriptlang.org/tsconfig/#moduleResolution)
-is set to `"bundler"`, it does not set the ECMAScript `"node"` condition, causing the Node specific function fail to import.
+Most methods can accept a `status` option, which is an
+[`LRUCache.Status`](https://isaacs.github.io/node-lru-cache/interfaces/LRUCache.LRUCache.Status.html)
+object that will be decorated along the operation with
+indications about what was done and why.
 
-This is the case using Next.js. See [issue #2370](https://github.com/Borewit/music-metadata/issues/2370) how to resolve that.
+Additionally, this library is instrumented using the
+[`node:diagnostics_channel`](https://nodejs.org/api/diagnostics_channel.html)
+module on Node and other platforms that support it. In order to
+get diagnostics metrics, listen on the
+`channel('lru-cache:metrics')`. To get Tracing Channel traces,
+subscribe to the `tracingChannel('lru-cache')`. The
+[`LRUCache.Status`](https://isaacs.github.io/node-lru-cache/interfaces/LRUCache.LRUCache.Status.html)
+objects will be provided as the message context to those channel
+listeners.
 
-## Licence
+For example, you could do the following to get comprehensive
+information about every LRUCache instance in your application:
 
-This project is licensed under the [MIT License](LICENSE.txt). Feel free to use, modify, and distribute as needed.
+```ts
+import { tracingChannel, subscribe } from 'node:diagnostics_channel'
+
+subscribe('lru-cache:metrics', (message, name) => {
+  // name will always be 'lru-cache:metrics'
+  // message will be the LRUCache.Status object for whatever
+  // synchronous operation was performed.
+  console.error('LRUCache Metrics', message)
+})
+
+tracingChannel('lru-cache').subscribe({
+  start: status => {
+    // a traced operation is starting
+  },
+  asyncStart: status => {
+    // an async traced operation is starting
+  },
+  asyncEnd: status => {
+    // an async traced operation is ending
+  }
+  error: status => {
+    // a traced operation failed
+  },
+  end: status => {
+    // a traced operation is complete
+  },
+})
+```
+
+The async `cache.fetch()` and `cache.forceFetch` methods are
+covered by `tracingChannels`. All the other operations are
+covered by the `lru-cache:metrics` channel, because they are
+strictly synchronous, and thus don't have an asynchronous
+lifecycle to track.
+
+Note that using `status` objects or using
+`node:diagnostics_channel` listeners _will_ impose a modest
+performance penalty. Creating data objects is not ever free; do
+not believe anyone who tells you otherwise. But it is as small as
+possible.
+
+### Platform Compatibility Caveat
+
+Not all platforms support the `node:diagnostics_channel` module.
+Currently, this is only available in Node, Bun, and Deno, and
+some edge computing platforms that provide a Node compatibility
+layer.
+
+To work around this, if you are loading in a non-Node
+environment, the package.json exports will direct your module
+loader to pull in a version that starts out with a dummy
+implementation, then does a conditional dynamic `import` of the
+`node:diagnostics_channel` module, and then swaps out those
+dummy objects with the real thing if it succeeds. This means that
+cache metrics and tracing channels started in the first load-time
+tick of your application will _not_ be covered, except in
+environments that load using the `require` import
+condition, or both the `node` and `esm` import conditions
+together.
+
+Top-level await _could_ be used to remove this caveat, but that
+feature is dead on arrival, unfortunately. See
+[#397](https://github.com/isaacs/node-lru-cache/issues/397) and
+[#398](https://github.com/isaacs/node-lru-cache/issues/398) for
+more details.
+
+## Performance
+
+As of April 2026, version 11 of this library is one of the most
+performant LRU cache implementations in JavaScript.
+
+Benchmarks can be extremely difficult to get right. In
+particular, the performance of set/get/delete operations on
+objects will vary _wildly_ depending on the type of key used. V8
+is highly optimized for objects with keys that are short strings,
+especially integer numeric strings. Thus any benchmark which
+tests _solely_ using numbers as keys will tend to find that an
+object-based approach performs the best.
+
+Note that coercing _anything_ to strings to use as object keys is
+unsafe, unless you can be 100% certain that no other type of
+value will be used. For example:
+
+```js
+const myCache = {}
+const set = (k, v) => (myCache[k] = v)
+const get = k => myCache[k]
+
+set({}, 'please hang onto this for me')
+set('[object Object]', 'oopsie')
+```
+
+Also beware of "Just So" stories regarding performance. Garbage
+collection of large (especially: deep) object graphs can be
+incredibly costly, with several "tipping points" where it
+increases exponentially. As a result, putting that off until
+later can make it much worse, and less predictable. If a library
+performs well, but only in a scenario where the object graph is
+kept shallow, then that won't help you if you are using large
+objects as keys.
+
+In general, when attempting to use a library to improve
+performance (such as a cache like this one), it's best to choose
+an option that will perform well in the sorts of scenarios where
+you'll actually use it.
+
+This library is optimized for repeated gets and minimizing
+eviction time, since that is the expected need of a LRU. Set
+operations are somewhat slower on average than a few other
+options, in part because of that optimization. It is assumed
+that you'll be caching some costly operation, ideally as rarely
+as possible, so optimizing set over get would be unwise.
+
+If performance matters to you:
+
+1. If it's at all possible to use small integer values as keys,
+   and you can guarantee that no other types of values will be
+   used as keys, then do that, and use a cache such as
+   [lru-fast](https://npmjs.com/package/lru-fast), or
+   [mnemonist's
+   LRUCache](https://yomguithereal.github.io/mnemonist/lru-cache)
+   which uses an Object as its data store.
+
+2. Failing that, if you can use short non-numeric strings (ie,
+   less than 256 characters) as your keys, and you do not need
+   any of the other features of this library, use [mnemonist's
+   LRUCache](https://yomguithereal.github.io/mnemonist/lru-cache).
+
+3. If the types of your keys will be anything else, especially
+   long strings, strings that look like floats, objects, or some
+   mix of types, or if you aren't sure, then this library will
+   work well for you.
+
+   If you do not need the features that this library provides
+   (like asynchronous fetching, a variety of TTL staleness
+   options, and so on), then [mnemonist's
+   LRUMap](https://yomguithereal.github.io/mnemonist/lru-map) is
+   also a very good option, and just slightly faster than this
+   module (since it does considerably less).
+
+4. Do not use a `dispose` function, size tracking, or especially
+   ttl behavior or observability features, unless absolutely
+   needed. These features are convenient, and necessary in some
+   use cases, and every attempt has been made to make the
+   performance impact minimal, but it isn't nothing.
+
+## Testing
+
+When writing tests that involve TTL-related functionality, note
+that this module creates an internal reference to the global
+`performance` or `Date` objects at import time. If you import it
+statically at the top level, those references cannot be mocked or
+overridden in your test environment.
+
+To avoid this, dynamically import the package within your tests
+so that the references are captured after your mocks are applied.
+For example:
+
+```ts
+// ❌ Not recommended
+import { LRUCache } from 'lru-cache'
+// mocking timers, e.g. jest.useFakeTimers()
+
+// ✅ Recommended for TTL tests
+// mocking timers, e.g. jest.useFakeTimers()
+const { LRUCache } = await import('lru-cache')
+```
+
+This ensures that your mocked timers or time sources are
+respected when testing TTL behavior.
+
+Additionally, you can pass in a `perf` option when creating your
+LRUCache instance. This option accepts any object with a `now`
+method that returns a number.
+
+For example, this would be a very bare-bones time-mocking system
+you could use in your tests, without any particular test
+framework:
+
+```ts
+import { LRUCache } from 'lru-cache'
+
+let myClockTime = 0
+
+const cache = new LRUCache<string>({
+  max: 10,
+  ttl: 1000,
+  perf: {
+    now: () => myClockTime,
+  },
+})
+
+// run tests, updating myClockTime as needed
+```
+
+## Breaking Changes in Version 7
+
+This library changed to a different algorithm and internal data
+structure in version 7, yielding significantly better
+performance, albeit with some subtle changes as a result.
+
+If you were relying on the internals of LRUCache in version 6 or
+before, it probably will not work in version 7 and above.
+
+## Breaking Changes in Version 8
+
+- The `fetchContext` option was renamed to `context`, and may no
+  longer be set on the cache instance itself.
+- Rewritten in TypeScript, so pretty much all the types moved
+  around a lot.
+- The AbortController/AbortSignal polyfill was removed. For this
+  reason, **Node version 16.14.0 or higher is now required**.
+- Internal properties were moved to actual private class
+  properties.
+- Keys and values must not be `null` or `undefined`.
+- Minified export available at `'lru-cache/min'`, for both CJS
+  and MJS builds.
+
+## Breaking Changes in Version 9
+
+- Named export only, no default export.
+- AbortController polyfill returned, albeit with a warning when
+  used.
+
+## Breaking Changes in Version 10
+
+- `cache.fetch()` return type is now `Promise<V | undefined>`
+  instead of `Promise<V | void>`. This is an irrelevant change
+  practically speaking, but can require changes for TypeScript
+  users.
+
+For more info, see the [change log](CHANGELOG.md).
